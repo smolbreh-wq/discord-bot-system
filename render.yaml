@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: discord-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: TOKEN
+        sync: false
+      - key: TOKEN2  
+        sync: false
+      - key: TOKEN3
+        sync: false
+      - key: SMS_ACTIVATE_API_KEY
+        sync: false
+      - key: CAPTCHA_API_KEY
+        sync: false
