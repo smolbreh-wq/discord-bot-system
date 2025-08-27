@@ -10,10 +10,10 @@ import aiofiles
 # ---------- CONFIG ----------
 # Bot configurations: {token_env_name: prefix}
 BOT_CONFIGS = {
-    "TOKEN": "$",  # Main bot with $ prefix
-    "TOKEN2": "!",  # Second bot with ! prefix  
-    "TOKEN3": "?",  # Third bot with ? prefix
-    # Add more bots as needed: "TOKEN4": "&", etc.
+    "TOKEN": "$",  # Main self-bot with $ prefix
+    "TOKEN2": "!",  # Second self-bot with ! prefix  
+    "TOKEN3": "?",  # Third self-bot with ? prefix
+    # Add more self-bots as needed: "TOKEN4": "&", etc.
 }
 
 ALLOWED_USERS = [
@@ -25,7 +25,7 @@ ALLOWED_USERS = [
 MIN_DELAY = 0.5  # seconds
 MAX_AMOUNT = 20
 
-# Global variables to track spam tasks and stop flags for all bots
+# Global variables to track spam tasks and stop flags for all self-bots
 spam_tasks = {}
 stop_flags = {}
 bots = {}
@@ -33,7 +33,7 @@ emergency_stop = False
 
 # Auto-restart functionality
 last_commands = {
-}  # Track last command per user per bot: {f"{prefix}_{user_id}": command_data}
+}  # Track last command per user per self-bot: {f"{prefix}_{user_id}": command_data}
 restart_tasks = {}  # Track restart attempts
 MAX_RESTART_ATTEMPTS = 3
 RESTART_DELAY = 5  # seconds to wait before restart
@@ -71,7 +71,7 @@ async def restart_last_command(ctx, prefix: str, error_msg: str = None):
     if command_data['attempts'] > MAX_RESTART_ATTEMPTS:
         try:
             await ctx.author.send(
-                f"❌ Max restart attempts ({MAX_RESTART_ATTEMPTS}) reached for {prefix} bot. "
+                f"❌ Max restart attempts ({MAX_RESTART_ATTEMPTS}) reached for {prefix} self-bot. "
                 f"Please manually restart the command if needed.")
         except:
             pass
@@ -80,7 +80,7 @@ async def restart_last_command(ctx, prefix: str, error_msg: str = None):
 
     try:
         await ctx.author.send(
-            f"🔄 Restarting command on {prefix} bot (attempt {command_data['attempts']}/{MAX_RESTART_ATTEMPTS})"
+            f"🔄 Restarting command on {prefix} self-bot (attempt {command_data['attempts']}/{MAX_RESTART_ATTEMPTS})"
             f"{f' after error: {error_msg}' if error_msg else ''}...")
     except:
         pass
@@ -120,7 +120,7 @@ async def restart_last_command(ctx, prefix: str, error_msg: str = None):
     except Exception as e:
         try:
             await ctx.author.send(
-                f"❌ Failed to restart command on {prefix} bot: {e}")
+                f"❌ Failed to restart command on {prefix} self-bot: {e}")
         except:
             pass
         return False
@@ -307,10 +307,10 @@ async def execute_spm_command(ctx,
                            message=message,
                            delay=delay)
 
-    # Create unique key for this bot and user combination
+    # Create unique key for this self-bot and user combination
     spam_key = f"{prefix}_{user_id}"
 
-    # Stop any existing spam for this user on this specific bot
+    # Stop any existing spam for this user on this specific self-bot
     if spam_key in spam_tasks:
         spam_tasks[spam_key].cancel()
         spam_tasks.pop(spam_key, None)
@@ -319,7 +319,7 @@ async def execute_spm_command(ctx,
     if store_command:  # Only notify on original command, not restarts
         try:
             await ctx.author.send(
-                f"🚀 Starting spam on {prefix} bot: '{message}' with {delay}s delay. Use `{prefix}stop` or `{prefix}spm stop` to stop."
+                f"🚀 Starting spam on {prefix} self-bot: '{message}' with {delay}s delay. Use `{prefix}stop` or `{prefix}spm stop` to stop."
             )
         except:
             pass
@@ -336,20 +336,26 @@ async def execute_spm_command(ctx,
         spam_tasks.pop(spam_key, None)
 
 
-def create_bot(prefix: str, bot_name: str):
-    """Create a bot instance with the given prefix"""
-    bot = commands.Bot(command_prefix=prefix)
+def create_selfbot(prefix: str, bot_name: str):
+    """Create a self-bot instance with the given prefix"""
+    # For self-bots, use Client instead of Bot to avoid intent issues
+    class SelfBot(commands.Bot):
+        def __init__(self, **options):
+            # Self-bots should not have intents specified
+            super().__init__(command_prefix=prefix, self_bot=True, **options)
+
+    bot = SelfBot()
 
     @bot.event
     async def on_ready():
         print(f"✅ {bot_name} logged in as {bot.user} (ID: {bot.user.id})")
         print(
-            f"Bot is ready and listening for commands with prefix '{prefix}'")
+            f"Self-bot is ready and listening for commands with prefix '{prefix}'")
         print(f"Authorized users: {ALLOWED_USERS}")
 
     @bot.check
     async def is_allowed(ctx):
-        """Global check to ensure only authorized users can use bot commands"""
+        """Global check to ensure only authorized users can use self-bot commands"""
         is_authorized = ctx.author.id in ALLOWED_USERS
         # Silently ignore unauthorized users - no response message
         return is_authorized
@@ -438,14 +444,14 @@ def create_bot(prefix: str, bot_name: str):
             except:
                 pass
 
-        # Stop spam command for this specific bot
+        # Stop spam command for this specific self-bot
         spam_key = f"{prefix}_{user_id}"
         if spam_key in spam_tasks:
             spam_tasks[spam_key].cancel()
             spam_tasks.pop(spam_key, None)
             try:
                 await ctx.author.send(
-                    f"🛑 Spam sending stopped on {prefix} bot.")
+                    f"🛑 Spam sending stopped on {prefix} self-bot.")
             except:
                 pass
 
@@ -455,14 +461,14 @@ def create_bot(prefix: str, bot_name: str):
             last_commands.pop(last_command_key, None)
             try:
                 await ctx.author.send(
-                    f"🛑 Auto-restart disabled for {prefix} bot.")
+                    f"🛑 Auto-restart disabled for {prefix} self-bot.")
             except:
                 pass
 
         if user_id not in stop_flags and spam_key not in spam_tasks:
             try:
                 await ctx.author.send(
-                    f"ℹ️ No active message sending to stop on {prefix} bot.")
+                    f"ℹ️ No active message sending to stop on {prefix} self-bot.")
             except:
                 pass
 
@@ -512,7 +518,7 @@ def create_bot(prefix: str, bot_name: str):
                 spam_tasks[spam_key].cancel()
                 spam_tasks.pop(spam_key, None)
                 try:
-                    await ctx.author.send(f"🛑 Spam stopped on {prefix} bot.")
+                    await ctx.author.send(f"🛑 Spam stopped on {prefix} self-bot.")
                 except:
                     pass
 
@@ -522,14 +528,14 @@ def create_bot(prefix: str, bot_name: str):
                 last_commands.pop(last_command_key, None)
                 try:
                     await ctx.author.send(
-                        f"🛑 Auto-restart disabled for {prefix} bot.")
+                        f"🛑 Auto-restart disabled for {prefix} self-bot.")
                 except:
                     pass
 
             if spam_key not in spam_tasks:
                 try:
                     await ctx.author.send(
-                        f"ℹ️ No active spam to stop on {prefix} bot.")
+                        f"ℹ️ No active spam to stop on {prefix} self-bot.")
                 except:
                     pass
 
@@ -544,7 +550,7 @@ def create_bot(prefix: str, bot_name: str):
     @bot.command()
     async def restart(ctx):
         """
-        Manually restart the last command that was running on this bot.
+        Manually restart the last command that was running on this self-bot.
 
         Usage: {prefix}restart
         """
@@ -554,7 +560,7 @@ def create_bot(prefix: str, bot_name: str):
         if key not in last_commands:
             try:
                 await ctx.author.send(
-                    f"ℹ️ No previous command to restart on {prefix} bot.")
+                    f"ℹ️ No previous command to restart on {prefix} self-bot.")
             except:
                 pass
             return
@@ -564,7 +570,7 @@ def create_bot(prefix: str, bot_name: str):
 
         try:
             await ctx.author.send(
-                f"🔄 Manually restarting last command on {prefix} bot...")
+                f"🔄 Manually restarting last command on {prefix} self-bot...")
         except:
             pass
 
@@ -572,8 +578,8 @@ def create_bot(prefix: str, bot_name: str):
 
     @bot.command()
     async def help_bot(ctx):
-        """Display help information about bot commands"""
-        help_message = f"""🤖 **Discord Bot Help** (Prefix: {prefix})
+        """Display help information about self-bot commands"""
+        help_message = f"""🤖 **Discord Self-Bot Help** (Prefix: {prefix})
 Available commands for authorized users:
 
 **`{prefix}send [message] [delay] [amount]`**
@@ -594,14 +600,14 @@ Stop continuous spam
 
 **`{prefix}stop`**
 Stop any active message sending (works for both send and spm)
-Also disables auto-restart for this bot
+Also disables auto-restart for this self-bot
 
 **`{prefix}restart`**
 Manually restart the last command that was running
 
 **`>stopall`**
-🚨 EMERGENCY STOP - Immediately stops ALL bots and commands
-(Works with any bot, uses > prefix instead of {prefix})
+🚨 EMERGENCY STOP - Immediately stops ALL self-bots and commands
+(Works with any self-bot, uses > prefix instead of {prefix})
 
 **Auto-Restart Features**
 • Commands automatically restart after errors (max {MAX_RESTART_ATTEMPTS} attempts)
@@ -613,10 +619,11 @@ Manually restart the last command that was running
 • Minimum delay: {MIN_DELAY} seconds
 • User authorization required
 • Individual stop controls per user
-• Emergency stop for all bots
+• Emergency stop for all self-bots
 • Automatic command cleanup
 
-Bot is running 24/7 on Replit with keep-alive monitoring"""
+⚠️ **Self-Bot Warning**: Self-bots are against Discord's ToS. Use at your own risk.
+Self-bot is running 24/7 on Render with keep-alive monitoring"""
 
         await ctx.send(help_message)
 
@@ -624,6 +631,10 @@ Bot is running 24/7 on Replit with keep-alive monitoring"""
     async def on_message(message):
         """Handle emergency stopall command and regular commands"""
         global emergency_stop
+
+        # Ignore messages from other bots (but not self-bots)
+        if message.author.bot and not message.author.id == bot.user.id:
+            return
 
         # Check for emergency stopall command
         if message.content == ">stopall" and message.author.id in ALLOWED_USERS:
@@ -643,7 +654,7 @@ Bot is running 24/7 on Replit with keep-alive monitoring"""
 
             try:
                 await message.author.send(
-                    "🚨 EMERGENCY STOP ACTIVATED - All bots stopped! Auto-restart disabled for all commands."
+                    "🚨 EMERGENCY STOP ACTIVATED - All self-bots stopped! Auto-restart disabled for all commands."
                 )
             except:
                 pass
@@ -756,7 +767,7 @@ async def handle_account_generation(message):
 
 
 async def generate_and_deploy_account(prefix, user_id):
-    """Generate account and deploy new bot"""
+    """Generate account and deploy new self-bot"""
     global generated_accounts, generation_tasks, BOT_CONFIGS, bots
 
     try:
@@ -771,20 +782,20 @@ async def generate_and_deploy_account(prefix, user_id):
             # Store account data
             generated_accounts[prefix] = result
 
-            # Add to bot configs
+            # Add to self-bot configs
             token_env_name = f"TOKEN_{prefix.upper()}"
             BOT_CONFIGS[token_env_name] = prefix
 
             # Set environment variable (temporary for this session)
             os.environ[token_env_name] = token
 
-            # Create and start new bot
-            bot_name = f"Bot-{prefix}"
-            bot = create_bot(prefix, bot_name)
+            # Create and start new self-bot
+            bot_name = f"SelfBot-{prefix}"
+            bot = create_selfbot(prefix, bot_name)
             bots[prefix] = bot
 
-            # Start bot
-            asyncio.create_task(bot.start(token))
+            # Start self-bot
+            asyncio.create_task(bot.start(token, bot=False))
 
             # Save to file for persistence
             await save_generated_accounts()
@@ -804,7 +815,7 @@ async def generate_and_deploy_account(prefix, user_id):
                         f"✅ Account generated successfully!\n"
                         f"**Prefix:** {prefix}\n"
                         f"**Username:** {username}\n"
-                        f"**Bot Status:** Online and ready\n"
+                        f"**Self-Bot Status:** Online and ready\n"
                         f"You can now use `{prefix}send`, `{prefix}spm`, etc.")
             except:
                 pass
@@ -876,8 +887,8 @@ async def load_generated_accounts():
         generated_accounts = {}
 
 
-async def run_multiple_bots():
-    """Run multiple bot instances simultaneously"""
+async def run_multiple_selfbots():
+    """Run multiple self-bot instances simultaneously"""
     # Load existing generated accounts
     await load_generated_accounts()
 
@@ -886,16 +897,16 @@ async def run_multiple_bots():
     for token_name, prefix in BOT_CONFIGS.items():
         token = os.getenv(token_name)
         if token:
-            bot = create_bot(prefix, f"Bot-{prefix}")
+            bot = create_selfbot(prefix, f"SelfBot-{prefix}")
             bots[prefix] = bot  # Store by prefix for easier access
 
-            # Create a task for this bot
-            task = asyncio.create_task(bot.start(token))
+            # Create a task for this self-bot (note: bot=False for self-bots)
+            task = asyncio.create_task(bot.start(token, bot=False))
             bot_tasks.append(task)
-            print(f"🚀 Starting bot with prefix '{prefix}' using {token_name}")
+            print(f"🚀 Starting self-bot with prefix '{prefix}' using {token_name}")
         else:
             print(
-                f"⚠️ {token_name} not found in environment variables, skipping bot with prefix '{prefix}'"
+                f"⚠️ {token_name} not found in environment variables, skipping self-bot with prefix '{prefix}'"
             )
 
     if not bot_tasks:
@@ -904,18 +915,21 @@ async def run_multiple_bots():
         )
         return
 
-    # Wait for all bots to finish (they should run indefinitely)
+    # Wait for all self-bots to finish (they should run indefinitely)
     try:
         await asyncio.gather(*bot_tasks)
     except Exception as e:
-        print(f"❌ Error running bots: {e}")
+        print(f"❌ Error running self-bots: {e}")
 
 
 if __name__ == "__main__":
     # Start the Flask keep-alive server
     keep_alive()
 
-    print("🤖 Discord Multi-Bot System with Account Generation Starting...")
+    print("🤖 Discord Multi-SelfBot System with Account Generation Starting...")
+    print("=" * 70)
+    print("⚠️ WARNING: Self-bots violate Discord's Terms of Service!")
+    print("⚠️ Use at your own risk. Accounts may be suspended/banned.")
     print("=" * 70)
 
     # Check API keys for account generation
@@ -924,28 +938,4 @@ if __name__ == "__main__":
 
     print("Account Generation Services:")
     print(
-        f"  SMS Service: {'✅ Ready' if sms_key else '❌ Missing SMS_ACTIVATE_API_KEY'}"
-    )
-    print(
-        f"  CAPTCHA Service: {'✅ Ready' if captcha_key else '❌ Missing CAPTCHA_API_KEY'}"
-    )
-    print()
-
-    print("Configured bots:")
-    for token_name, prefix in BOT_CONFIGS.items():
-        token = os.getenv(token_name)
-        status = "✅ Ready" if token else "❌ Missing"
-        print(f"  {prefix} prefix - {token_name}: {status}")
-    print()
-    print("Commands:")
-    print(
-        "  >generate account [prefix] - Generate new Discord account and bot")
-    print("  >stopall - Emergency stop all bots")
-    print("=" * 70)
-
-    try:
-        asyncio.run(run_multiple_bots())
-    except KeyboardInterrupt:
-        print("\n🛑 Shutting down all bots...")
-    except Exception as e:
-        print(f"❌ Failed to start bots: {e}")
+        f"  SMS Service: {'✅ Ready' if sms_key else '
