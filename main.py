@@ -938,4 +938,28 @@ if __name__ == "__main__":
 
     print("Account Generation Services:")
     print(
-        f"  SMS Service: {'✅ Ready' if sms_key else '
+        f"  SMS Service: {'✅ Ready' if sms_key else '❌ Missing SMS_ACTIVATE_API_KEY'}"
+    )
+    print(
+        f"  CAPTCHA Service: {'✅ Ready' if captcha_key else '❌ Missing CAPTCHA_API_KEY'}"
+    )
+    print()
+
+    print("Configured self-bots:")
+    for token_name, prefix in BOT_CONFIGS.items():
+        token = os.getenv(token_name)
+        status = "✅ Ready" if token else "❌ Missing"
+        print(f"  {prefix} prefix - {token_name}: {status}")
+    print()
+    print("Commands:")
+    print(
+        "  >generate account [prefix] - Generate new Discord account and self-bot")
+    print("  >stopall - Emergency stop all self-bots")
+    print("=" * 70)
+
+    try:
+        asyncio.run(run_multiple_selfbots())
+    except KeyboardInterrupt:
+        print("\n🛑 Shutting down all self-bots...")
+    except Exception as e:
+        print(f"❌ Failed to start self-bots: {e}")
