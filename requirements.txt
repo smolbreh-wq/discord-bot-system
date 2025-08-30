@@ -1,6 +1,6 @@
 aiofiles==24.1.0
 beautifulsoup4==4.13.4
-discord.py==1.7.3
+discord-py>=2.6.0
 discord-py-self==2.0.1
 fake-useragent==2.2.0
 flask==3.1.2
