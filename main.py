@@ -338,8 +338,8 @@ async def execute_spm_command(ctx,
 
 def create_bot(prefix: str, bot_name: str):
     """Create a bot instance with the given prefix"""
-    # Using discord.py-self for user token compatibility
-    bot = commands.Bot(command_prefix=prefix, self_bot=True)
+    # Using discord.py-self - no intents or self_bot needed
+    bot = commands.Bot(command_prefix=prefix)
 
     @bot.event
     async def on_ready():
@@ -352,7 +352,11 @@ def create_bot(prefix: str, bot_name: str):
     async def is_allowed(ctx):
         """Global check to ensure only authorized users can use bot commands"""
         is_authorized = ctx.author.id in ALLOWED_USERS
-        # Silently ignore unauthorized users - no response message
+        # Debug: Print user ID for troubleshooting
+        if not is_authorized:
+            print(f"❌ Unauthorized user tried command: {ctx.author.id} (not in {ALLOWED_USERS})")
+        else:
+            print(f"✅ Authorized user {ctx.author.id} using command: {ctx.command}")
         return is_authorized
 
     @bot.command()
@@ -660,6 +664,10 @@ Bot is running 24/7 on Replit with keep-alive monitoring"""
             await handle_account_generation(message)
             return
 
+        # Debug: Show when processing commands
+        if message.content.startswith(('$', '!', '?', '>')) and message.author.id in ALLOWED_USERS:
+            print(f"🔍 Processing command: '{message.content}' from user {message.author.id}")
+        
         # Process normal commands
         await bot.process_commands(message)
 
@@ -968,4 +976,3 @@ if __name__ == "__main__":
         print("\n🛑 Shutting down all bots...")
     except Exception as e:
         print(f"❌ Failed to start bots: {e}")
-
