@@ -339,8 +339,7 @@ async def execute_spm_command(ctx,
 def create_bot(prefix: str, bot_name: str):
     """Create a bot instance with the given prefix"""
     # Using discord.py-self for user token compatibility
-    intents = discord.Intents.all()
-    bot = commands.Bot(command_prefix=prefix, self_bot=True, intents=intents)
+    bot = commands.Bot(command_prefix=prefix, self_bot=True)
 
     @bot.event
     async def on_ready():
@@ -969,3 +968,4 @@ if __name__ == "__main__":
         print("\n🛑 Shutting down all bots...")
     except Exception as e:
         print(f"❌ Failed to start bots: {e}")
+
