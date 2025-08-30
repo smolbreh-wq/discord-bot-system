@@ -338,9 +338,7 @@ async def execute_spm_command(ctx,
 
 def create_bot(prefix: str, bot_name: str):
     """Create a bot instance with the given prefix"""
-    intents = discord.Intents.default()
-    intents.message_content = True  # Required for reading message content
-    bot = commands.Bot(command_prefix=prefix, intents=intents)
+    bot = commands.Bot(command_prefix=prefix)
 
     @bot.event
     async def on_ready():
