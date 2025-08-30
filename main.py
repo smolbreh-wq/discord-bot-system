@@ -338,9 +338,8 @@ async def execute_spm_command(ctx,
 
 def create_bot(prefix: str, bot_name: str):
     """Create a bot instance with the given prefix"""
-    # For self-bots: user tokens automatically have all intents
-    intents = discord.Intents.all()
-    bot = commands.Bot(command_prefix=prefix, intents=intents)
+    # Using discord.py-self for user token compatibility
+    bot = commands.Bot(command_prefix=prefix, self_bot=True)
 
     @bot.event
     async def on_ready():
