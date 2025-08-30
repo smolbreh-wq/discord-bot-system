@@ -16,13 +16,6 @@ BOT_CONFIGS = {
     # Add more bots as needed: "TOKEN4": "&", etc.
 }
 
-# Hardcoded tokens for local development
-HARDCODED_TOKENS = {
-    "TOKEN": "",
-    "TOKEN2": "", 
-    "TOKEN3": ""  # Add your third token here if needed
-}
-
 ALLOWED_USERS = [
     1096838620712804405,
     1348330851263315968,
@@ -46,24 +39,10 @@ MAX_RESTART_ATTEMPTS = 3
 RESTART_DELAY = 5  # seconds to wait before restart
 
 # Account generation system
+
 generated_accounts = {}  # Store generated account data
 generation_tasks = {}  # Track ongoing generation tasks
 # ---------------------------
-
-
-def get_token(token_name):
-    """Get token from hardcoded values first, then environment variables"""
-    # First check hardcoded tokens
-    hardcoded_token = HARDCODED_TOKENS.get(token_name)
-    if hardcoded_token and hardcoded_token.strip():  # Make sure it's not empty
-        return hardcoded_token
-    
-    # Fallback to environment variable
-    env_token = os.getenv(token_name)
-    if env_token and env_token.strip():
-        return env_token
-    
-    return None
 
 
 def store_last_command(prefix: str, user_id: int, command_type: str, **kwargs):
@@ -903,12 +882,20 @@ async def run_multiple_bots():
     await load_generated_accounts()
 
     bot_tasks = []
-    
+
+    # Hardcoded tokens for local development
+    HARDCODED_TOKENS = {
+        "TOKEN":
+        "",
+        "TOKEN2":
+        "",
+        "TOKEN3": ""
+    }
+
     for token_name, prefix in BOT_CONFIGS.items():
-        # Use the improved token retrieval function
-        token = get_token(token_name)
-        
-        if token:
+        # Use hardcoded token first, fallback to environment variable
+        token = HARDCODED_TOKENS.get(token_name) or os.getenv(token_name)
+        if token and token != f"YOUR_{token_name.split('TOKEN')[0]}DISCORD_TOKEN_HERE":
             bot = create_bot(prefix, f"Bot-{prefix}")
             bots[prefix] = bot  # Store by prefix for easier access
 
@@ -917,10 +904,14 @@ async def run_multiple_bots():
             bot_tasks.append(task)
             print(f"🚀 Starting bot with prefix '{prefix}' using {token_name}")
         else:
-            print(f"⚠️ {token_name} not found, skipping bot with prefix '{prefix}'")
+            print(
+                f"⚠️ {token_name} not found or using placeholder, skipping bot with prefix '{prefix}'"
+            )
 
     if not bot_tasks:
-        print("❌ No valid tokens found. Please add tokens to HARDCODED_TOKENS or environment variables.")
+        print(
+            "❌ No valid tokens found. Please add at least TOKEN to your secrets."
+        )
         return
 
     # Wait for all bots to finish (they should run indefinitely)
@@ -937,14 +928,17 @@ if __name__ == "__main__":
     print("🤖 Discord Multi-Bot System with Account Generation Starting...")
     print("=" * 70)
 
+    # Check API keys for account generation
     # Hardcoded API keys for local development (optional)
     HARDCODED_API_KEYS = {
         "SMS_ACTIVATE_API_KEY": "",  # Add your SMS-Activate API key here
-        "CAPTCHA_API_KEY": ""        # Add your CAPTCHA API key here  
+        "CAPTCHA_API_KEY": ""  # Add your CAPTCHA API key here  
     }
-    
-    sms_key = HARDCODED_API_KEYS.get("SMS_ACTIVATE_API_KEY") or os.getenv('SMS_ACTIVATE_API_KEY')
-    captcha_key = HARDCODED_API_KEYS.get("CAPTCHA_API_KEY") or os.getenv('CAPTCHA_API_KEY')
+
+    sms_key = HARDCODED_API_KEYS.get("SMS_ACTIVATE_API_KEY") or os.getenv(
+        'SMS_ACTIVATE_API_KEY')
+    captcha_key = HARDCODED_API_KEYS.get("CAPTCHA_API_KEY") or os.getenv(
+        'CAPTCHA_API_KEY')
 
     print("Account Generation Services:")
     print(
@@ -957,7 +951,7 @@ if __name__ == "__main__":
 
     print("Configured bots:")
     for token_name, prefix in BOT_CONFIGS.items():
-        token = get_token(token_name)
+        token = os.getenv(token_name)
         status = "✅ Ready" if token else "❌ Missing"
         print(f"  {prefix} prefix - {token_name}: {status}")
     print()
