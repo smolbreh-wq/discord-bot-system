@@ -19,7 +19,7 @@ BOT_CONFIGS = {
 ALLOWED_USERS = [
     1096838620712804405,
     1348330851263315968,
-    1388657253451698306  # replace with your Discord user ID (int)
+    1414215242388344994  # replace with your Discord user ID (int)
     # Add more user IDs here as needed
 ]
 MIN_DELAY = 0.5  # seconds
@@ -976,3 +976,4 @@ if __name__ == "__main__":
         print("\n🛑 Shutting down all bots...")
     except Exception as e:
         print(f"❌ Failed to start bots: {e}")
+
