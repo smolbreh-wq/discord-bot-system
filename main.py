@@ -10,7 +10,7 @@ import aiofiles
 # ---------- CONFIG ----------
 # Bot configurations: {token_env_name: prefix}
 BOT_CONFIGS = {
-    "TOKEN": "$",  # Main bot with $ prefix
+    "TOKEN": "&",  # Main bot with $ prefix
     "TOKEN2": "!",  # Second bot with ! prefix  
     "TOKEN3": "?",  # Third bot with ? prefix
     # Add more bots as needed: "TOKEN4": "&", etc.
@@ -18,7 +18,7 @@ BOT_CONFIGS = {
 
 ALLOWED_USERS = [
     1096838620712804405,
-    1348330851263315968,
+    1397309521658904797,
     1414215242388344994,
     1397309521658904797# replace with your Discord user ID (int)
     # Add more user IDs here as needed
@@ -957,5 +957,6 @@ if __name__ == "__main__":
         print("\n🛑 Shutting down all bots...")
     except Exception as e:
         print(f"❌ Failed to start bots: {e}")
+
 
 
