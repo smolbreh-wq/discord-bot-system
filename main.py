@@ -19,7 +19,8 @@ BOT_CONFIGS = {
 ALLOWED_USERS = [
     1096838620712804405,
     1348330851263315968,
-    1414215242388344994  # replace with your Discord user ID (int)
+    1414215242388344994,
+    1397309521658904797# replace with your Discord user ID (int)
     # Add more user IDs here as needed
 ]
 MIN_DELAY = 0.5  # seconds
@@ -601,27 +602,7 @@ Stop continuous spam
 Stop any active message sending (works for both send and spm)
 Also disables auto-restart for this bot
 
-**`{prefix}restart`**
-Manually restart the last command that was running
-
-**`>stopall`**
-🚨 EMERGENCY STOP - Immediately stops ALL bots and commands
-(Works with any bot, uses > prefix instead of {prefix})
-
-**Auto-Restart Features**
-• Commands automatically restart after errors (max {MAX_RESTART_ATTEMPTS} attempts)
-• {RESTART_DELAY} second delay before restart attempts
-• Manual restart available with `{prefix}restart`
-• Auto-restart disabled when using stop commands
-
-**Safety Features**
-• Minimum delay: {MIN_DELAY} seconds
-• User authorization required
-• Individual stop controls per user
-• Emergency stop for all bots
-• Automatic command cleanup
-
-Bot is running 24/7 on Replit with keep-alive monitoring"""
+"""
 
         await ctx.send(help_message)
 
@@ -976,4 +957,5 @@ if __name__ == "__main__":
         print("\n🛑 Shutting down all bots...")
     except Exception as e:
         print(f"❌ Failed to start bots: {e}")
+
 
